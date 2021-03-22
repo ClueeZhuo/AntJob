@@ -1,0 +1,109 @@
+pool:
+  vmImage: 'Ubuntu 16.04'
+
+variables:
+  tagName: 'latest'
+  imageName: '$(dockerId)/antjobweb:$(Build.BuildNumber)'
+
+steps:
+
+- script: |
+    echo Build.BuildId - $(Build.BuildId)
+    echo Build.BuildNumber - $(Build.BuildNumber)
+  displayName: 'Use predefined variables'
+
+- script: docker build -f Dockerfile -t $(imageName) .
+  displayName: 'Docker build Script'
+
+- script: |
+    docker login -u $(dockerId) -p $(dockerPWD)
+    docker push $(imageName)
+  displayName: 'Push docker image'
+
+
+- task: SSH@0
+  displayName: 'Run shell inline on remote machine'
+  inputs:
+    sshEndpoint: 'websvr.cluee.tech'
+    runOptions: inline
+
+    inline: |
+     docker pull $(imageName)
+     rc=$?
+     if [[ $rc != 0 ]];
+     then
+      echo 'failed to pull image...'
+      exit $rc;
+     else
+      echo 'success to pull image...'
+     fi
+
+     containers=$(docker ps -q --filter name=antjobweb)
+     if test -n "$containers"; then
+      docker stop $(docker ps -q --filter name=antjobweb)
+      rc=$?
+      if [[ $rc != 0 ]];
+      then
+       echo 'failed to stop container...'
+       exit $rc;
+      else
+       echo 'success to stop container...'
+      fi
+     else
+      echo 'none to stop container...'
+     fi
+     
+     containers1=$(docker ps -q -a --filter name=antjobweb)
+     if test -n "$containers1"; then
+      docker rm $(docker ps -q -a --filter name=antjobweb)
+      rc=$?
+      if [[ $rc != 0 ]];
+      then
+       echo 'failed to remove container...'
+       exit $rc;
+      else
+       echo 'success to remove container...'
+      fi
+     else
+      echo 'none to remove container...'
+     fi
+
+     docker run -d -p 8080:80 --name antjobweb --mount source=newlife_data,target=/app/Data --restart=unless-stopped $(imageName)
+     rc=$?
+     if [[ $rc != 0 ]];
+     then
+      echo 'failed to run container...'
+      exit $rc;
+     else
+      echo 'success to run container...'
+     fi
+
+     danglings=$(docker images -f "dangling=true" -q)
+     if test -n "$danglings"; then
+      docker rmi $(docker images -f "dangling=true" -q)
+      rc=$?
+      if [[ $rc != 0 ]];
+      then
+       echo 'failed to remove danglings images...'
+       exit $rc;
+      else
+       echo 'success to remove danglings images...'
+      fi
+     else
+      echo 'none to remove danglings images...'
+     fi
+
+     oldimages=$(docker images clueezhuo/antjobweb -f "before=$(imageName)" -q)
+     if test -n "$oldimages"; then
+      docker rmi $(docker images clueezhuo/antjobweb -f "before=$(imageName)" -q)
+      rc=$?
+      if [[ $rc != 0 ]];
+      then
+       echo 'failed to remove oldimages images...'
+       exit $rc;
+      else
+       echo 'success to remove oldimages images...'
+      fi
+     else
+      echo 'none to remove oldimages images...'
+     fi
