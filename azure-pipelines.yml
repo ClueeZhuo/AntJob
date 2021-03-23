@@ -3,7 +3,7 @@ pool:
 
 variables:
   tagName: 'latest'
-  imageName: '$(dockerId)/antjobweb:$(Build.BuildNumber)'
+  imageName: '$(dockerId)/antweb:$(Build.BuildNumber)'
 
 steps:
 
@@ -38,9 +38,9 @@ steps:
       echo 'success to pull image...'
      fi
 
-     containers=$(docker ps -q --filter name=antjobweb)
+     containers=$(docker ps -q --filter name=antweb)
      if test -n "$containers"; then
-      docker stop $(docker ps -q --filter name=antjobweb)
+      docker stop $(docker ps -q --filter name=antweb)
       rc=$?
       if [[ $rc != 0 ]];
       then
@@ -53,9 +53,9 @@ steps:
       echo 'none to stop container...'
      fi
      
-     containers1=$(docker ps -q -a --filter name=antjobweb)
+     containers1=$(docker ps -q -a --filter name=antweb)
      if test -n "$containers1"; then
-      docker rm $(docker ps -q -a --filter name=antjobweb)
+      docker rm $(docker ps -q -a --filter name=antweb)
       rc=$?
       if [[ $rc != 0 ]];
       then
@@ -68,7 +68,7 @@ steps:
       echo 'none to remove container...'
      fi
 
-     docker run -d -p 10101:80 --name antjobweb --mount source=antjobweb_config,target=/app/Config --mount source=antjobweb_data,target=/app/Data --mount source=antjobweb_log,target=/app/Log --restart=unless-stopped $(imageName)
+     docker run -d -p 10101:80 --name antweb --mount source=antweb_config,target=/app/Config --mount source=antweb_data,target=/app/Data --mount source=antweb_log,target=/app/Log --restart=unless-stopped $(imageName)
      rc=$?
      if [[ $rc != 0 ]];
      then
@@ -93,9 +93,9 @@ steps:
       echo 'none to remove danglings images...'
      fi
 
-     oldimages=$(docker images clueezhuo/antjobweb -f "before=$(imageName)" -q)
+     oldimages=$(docker images clueezhuo/antweb -f "before=$(imageName)" -q)
      if test -n "$oldimages"; then
-      docker rmi $(docker images clueezhuo/antjobweb -f "before=$(imageName)" -q)
+      docker rmi $(docker images clueezhuo/antweb -f "before=$(imageName)" -q)
       rc=$?
       if [[ $rc != 0 ]];
       then
