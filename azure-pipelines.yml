@@ -68,7 +68,7 @@ steps:
       echo 'none to remove container...'
      fi
 
-     docker run -d -p 10101:80 --name antweb --mount source=antweb_config,target=/app/Config --mount source=antweb_data,target=/app/Data --mount source=antweb_log,target=/app/Log --restart=unless-stopped $(imageName)
+     docker run -d -p 10101:80 --name antweb --mount source=newlife_config,target=/app/Config --mount source=newlife_data,target=/app/Data --mount source=newlife_log,target=/app/Log --restart=unless-stopped $(imageName)
      rc=$?
      if [[ $rc != 0 ]];
      then
